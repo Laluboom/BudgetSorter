@@ -19,11 +19,11 @@
     "Recipt_Budget/OCR_Parsing.py",
     "Recipt_Budget/main.py",
     ".env (key names only)",
-    ".gitignore (absent)"
+    ".gitignore"
   ],
   "risks_confirmed": [
-    "No .gitignore — .env and bank statement CSVs unprotected",
     "run_ai_model() called unconditionally at module level, burns API quota on every run",
-    "OCR_Parsing.py has hardcoded placeholder API key 'helloworld'"
+    "Personal bank CSVs, receipt images, OCR JSON output, and .env must remain ignored",
+    "OCR scripts use OCR.space demo key unless OCR_SPACE_API_KEY is set in .env"
   ]
 }

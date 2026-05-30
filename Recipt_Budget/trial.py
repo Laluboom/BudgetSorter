@@ -3,9 +3,12 @@ import json
 import csv
 import re
 import os
+from dotenv import load_dotenv
 
 # --- CONFIGURATION ---
-API_KEY = 'helloworld' 
+load_dotenv()
+
+API_KEY = os.getenv("OCR_SPACE_API_KEY", "helloworld")
 IMAGE_PATH = 'tesco_receipt.jpeg' 
 CSV_FILENAME = 'receipt_log.csv'
 JSON_CACHE_FILE = 'raw_ocr_debug.json' # Where we save the API output

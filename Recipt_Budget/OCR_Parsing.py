@@ -4,8 +4,11 @@ import csv
 import re
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 
-API_KEY = 'helloworld'  # Replace with your OCR.space API key from the environment for real use.
+load_dotenv()
+
+API_KEY = os.getenv("OCR_SPACE_API_KEY", "helloworld")
 CSV_FILENAME = 'receipt_log.csv'
 IMAGE_PATH = ['City_Sport_Receipt(1).jpeg',
               'Sainsbury(1).jpeg',
@@ -129,6 +132,8 @@ def log_to_csv(date, items, total, filename):
 
 print("Scanning image...")
 for image in IMAGE_PATH:
+    if API_KEY == "helloworld":
+        print("Using OCR.space demo key. Set OCR_SPACE_API_KEY in .env for real usage.")
     raw_text = get_ocr_text(image, API_KEY)
     if raw_text:
         print("Parsing data...")

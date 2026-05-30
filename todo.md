@@ -1,10 +1,10 @@
 # TODOs
 
-1. **Add `.gitignore`** — no `.gitignore` exists. At minimum exclude `.env` (Gemini API key) and `Revolut_Sep_to_Jan.csv` / `Sorted_Revolut_Sep_to_Jan.csv` (real personal bank data) so they can never be accidentally committed.
+1. **Keep `.gitignore` current** — `.env`, real bank CSV exports, receipt images, OCR JSON output, and generated logs are ignored. Revisit this whenever new export folders or generated artifacts are added.
 
 2. **Move the top-level `run_ai_model()` call in `csv_statement_analysis.py:84`** — `run_ai_model("Write what comes after C")` fires on every execution of the script, burning API quota. Wrap it in a `if __name__ == "__main__":` guard or remove the test call entirely.
 
-3. **Replace hardcoded API key in `Recipt_Budget/OCR_Parsing.py:8`** — the key is set to the placeholder string `'helloworld'`. Load it from `.env` using `python-dotenv` (same pattern already used in `csv_statement_analysis.py`) so the OCR pipeline can actually run without editing source code.
+3. **Improve OCR configuration** — `Recipt_Budget/OCR_Parsing.py` and `Recipt_Budget/trial.py` now read `OCR_SPACE_API_KEY` from `.env`, falling back to OCR.space's demo key. Next step: centralize file paths so receipt images and OCR caches are configurable instead of hard-coded.
 
 ---
 

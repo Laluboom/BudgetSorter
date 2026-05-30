@@ -33,11 +33,11 @@ cd Recipt_Budget && python3 OCR_Parsing.py
 | `Sorted_Revolut_Sep_to_Jan.csv` | Pre-processed/sorted version of the same data |
 | `Recipt_Budget/OCR_Parsing.py` | Sends receipt images to OCR.space API, parses results, logs to CSV |
 | `Recipt_Budget/main.py` | Parses saved OCR JSON responses from `OCR_parse/` |
-| `.env` | Contains `GeminiAPI` key — must not be committed |
+| `.env` | Contains local API keys (`GeminiAPI`, `OCR_SPACE_API_KEY`) — ignored and must not be committed |
 
 ## Run Status (2026-05-29)
 Core analysis (pandas + sklearn) ran successfully — CSV loaded (301 rows), predictions generated. `google.generativeai` not installed on this machine so the Gemini call at the bottom of `csv_statement_analysis.py` would fail. `plt.show()` skipped (no display). Syntax check passed on all files.
 
 ## Security Notes
-- No `.gitignore` — `Revolut_Sep_to_Jan.csv` (real bank data) and `.env` (API key) are unprotected from accidental git commits.
-- `OCR_Parsing.py:8` has a hardcoded placeholder key `'helloworld'`; the real key should come from `.env`.
+- `.gitignore` excludes `.env`, real bank CSV exports, receipt images, OCR JSON output, caches, and generated logs.
+- OCR scripts read `OCR_SPACE_API_KEY` from `.env`, falling back to OCR.space's demo key for local testing.
