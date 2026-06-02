@@ -31,7 +31,7 @@
     "pull_attempted": true,
     "pull_result": "failed — SSH remote not accessible from this environment",
     "push_attempted": true,
-    "push_result": "failed — SSH remote not accessible from this environment after local commit a154793"
+    "push_result": "failed — SSH remote not accessible from this environment after local commits"
   },
   "next_review": "2026-06-02"
 }
