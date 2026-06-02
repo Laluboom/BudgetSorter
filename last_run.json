@@ -30,8 +30,8 @@
     "repo_present": true,
     "pull_attempted": true,
     "pull_result": "failed — SSH remote not accessible from this environment",
-    "push_attempted": false,
-    "push_result": "not attempted before local commit"
+    "push_attempted": true,
+    "push_result": "failed — SSH remote not accessible from this environment after local commit a154793"
   },
   "next_review": "2026-06-02"
 }
