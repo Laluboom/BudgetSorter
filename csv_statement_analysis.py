@@ -79,6 +79,4 @@ def run_ai_model(prompt: str) -> str:
     genai.configure(api_key=API_KEY)
     model = genai.GenerativeModel("gemini-pro") 
     response = model.generate_content(prompt)
-    print(response.text)
-
-run_ai_model("Write what comes after C")
+    return response.text
