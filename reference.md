@@ -1,6 +1,6 @@
 # Reference — BudgetSorter
 
-_Last refreshed: 2026-06-02_
+_Last refreshed: 2026-06-08_
 
 ## Purpose
 Financial data analysis tool for Revolut bank statements. It summarizes transaction history, predicts the next three months of spending with linear regression, and includes a separate receipt OCR workflow backed by OCR.space.
@@ -27,12 +27,11 @@ cd Recipt_Budget && python3 OCR_Parsing.py
 - `last_run.json`: latest inspection status
 - `todo.md`: grounded next tasks
 
-## Run Status (2026-06-02)
-The hard-coded Gemini smoke test was removed from `csv_statement_analysis.py`, so running the analysis script no longer triggers an API call just because the file executes. `python3 -m py_compile` passed for all inspected Python sources. Remote sync could not be verified: `git pull --ff-only` failed against the configured SSH remote because the local SSH configuration/permissions prevented repository access.
+## Run Status (2026-06-08)
+`csv_statement_analysis.py` now routes its analysis work through `main()` and an `if __name__ == "__main__":` guard, so importing the module no longer immediately reads the CSV, fits the regression model, prints reports, or opens matplotlib windows. Verification passed with `python3 -m py_compile csv_statement_analysis.py` plus a focused AST check confirming the `__main__` guard exists. This content-only run did not execute any git commands.
 
 ## Confirmed Issues
-- `csv_statement_analysis.py:9-10` and `Plot_csv.py:5` still depend on a hard-coded CSV filename and current working directory.
-- `csv_statement_analysis.py:9-82` still executes analysis work at import time, which makes reuse and testing awkward.
+- `csv_statement_analysis.py:28` and `Plot_csv.py:5` still depend on a hard-coded CSV filename and current working directory.
 - `Plot_csv.py:36`, `Plot_csv.py:53`, and `Plot_csv.py:66` still require a graphical display because they call `plt.show()` directly.
 - `Recipt_Budget/OCR_Parsing.py:12-15` still hard-codes both the output CSV path and the input receipt image list.
 - `Recipt_Budget/main.py:28` expects a `ParsedResults_3` key, which is non-standard for OCR.space responses and was not validated in this run.
