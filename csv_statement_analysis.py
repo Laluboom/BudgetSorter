@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import google.generativeai as genai
 import matplotlib.pyplot as plt
@@ -7,11 +8,15 @@ import pandas as pd
 from dotenv import load_dotenv
 from sklearn.linear_model import LinearRegression  # type: ignore
 
+DEFAULT_STATEMENT_CSV = Path(__file__).resolve().with_name("Revolut_Sep_to_Jan.csv")
+
+
 def total_spending_per_month(df):
     """Calculate total spending per month based on Description."""
     df_copy = df.copy()
     df_copy["Month"] = df_copy["Started Date"].dt.to_period("M")
     return df_copy.groupby(["Month", "Description"])["Amount"].sum().unstack(fill_value=0)
+
 
 def total_spending_per_week(df):
     """Calculate total spending per week based on Description."""
@@ -19,13 +24,22 @@ def total_spending_per_week(df):
     df_copy["Week"] = df_copy["Started Date"].dt.to_period("W")
     return df_copy.groupby(["Week", "Description"])["Amount"].sum().unstack(fill_value=0)
 
+
 def average_spending_per_category(df):
     """Calculate average spending per Description category."""
     df_copy = df.copy()
     return df_copy.groupby("Description")["Amount"].mean().sort_values(ascending=False)
 
 
-def load_statement_data(csv_path="Revolut_Sep_to_Jan.csv"):
+def resolve_statement_csv_path():
+    configured_path = os.getenv("BUDGETSORTER_STATEMENT_CSV")
+    if configured_path:
+        return Path(configured_path).expanduser()
+    return DEFAULT_STATEMENT_CSV
+
+
+def load_statement_data(csv_path=None):
+    csv_path = resolve_statement_csv_path() if csv_path is None else Path(csv_path)
     df = pd.read_csv(csv_path, parse_dates=["Started Date", "Completed Date"])
     df["Amount"] = df["Amount"].abs()
 
@@ -99,11 +113,12 @@ def main():
 
     plot_spending_trends(monthly_spending, y, future_months, future_predictions)
 
+
 # AI code to run when needed
 def run_ai_model(prompt: str) -> str:
     API_KEY = os.getenv("GeminiAPI")
     genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel("gemini-pro") 
+    model = genai.GenerativeModel("gemini-pro")
     response = model.generate_content(prompt)
     return response.text
 

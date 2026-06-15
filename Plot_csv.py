@@ -1,8 +1,24 @@
-import pandas as pd
+import os
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import pandas as pd
+
+DEFAULT_STATEMENT_CSV = Path(__file__).resolve().with_name("Revolut_Sep_to_Jan.csv")
+
+
+def resolve_statement_csv_path():
+    configured_path = os.getenv("BUDGETSORTER_STATEMENT_CSV")
+    if configured_path:
+        return Path(configured_path).expanduser()
+    return DEFAULT_STATEMENT_CSV
+
 
 # Load the CSV file
-df = pd.read_csv("Revolut_Sep_to_Jan.csv", parse_dates=["Started Date", "Completed Date"])
+df = pd.read_csv(
+    resolve_statement_csv_path(),
+    parse_dates=["Started Date", "Completed Date"],
+)
 
 total_spent = df["Amount"].sum()
 print(f"Total Spent: £{total_spent:.2f}")

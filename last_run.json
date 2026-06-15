@@ -1,25 +1,27 @@
 {
-  "date": "2026-06-08",
+  "date": "2026-06-15",
   "selected_by": "random choice from eligible Vellai projects after skip rules",
   "run_attempted": true,
   "run_succeeded": true,
-  "run_status": "Refactored csv_statement_analysis.py into a main()-guarded entry point so importing the module no longer executes the CSV load, regression fit, report printing, or plotting side effects.",
-  "chosen_todo_item": "todo.md item 1 — refactor csv_statement_analysis.py into a main() flow",
+  "run_status": "Completed TODO item 1 by replacing the duplicated hard-coded statement CSV path with a shared project-relative default plus a BUDGETSORTER_STATEMENT_CSV override in both statement scripts.",
+  "chosen_todo_item": "todo.md item 1 \u2014 replace the hard-coded statement CSV paths with a shared configurable input path",
   "issues_confirmed": [
-    "csv_statement_analysis.py:28 and Plot_csv.py:5 still rely on a hard-coded CSV filename and current working directory",
-    "Plot_csv.py:36, Plot_csv.py:53, and Plot_csv.py:66 still require a graphical display",
-    "Recipt_Budget/OCR_Parsing.py:12-15 still hard-code receipt image paths and the receipt log filename",
-    "Recipt_Budget/main.py:28 expects a ParsedResults_3 key; insufficient evidence that current OCR exports match that schema"
+    "Plot_csv.py:46-52, Plot_csv.py:63-69, and Plot_csv.py:76-82 still require a graphical display because they call plt.show() directly",
+    "Recipt_Budget/OCR_Parsing.py:12-15 still hard-code both the output CSV path and the input receipt image list",
+    "Recipt_Budget/main.py:28 expects a ParsedResults_3 key; insufficient evidence that current OCR exports match that schema",
+    "Revolut_Sep_to_Jan.csv is not present in the project root, so local runs still need either that file or BUDGETSORTER_STATEMENT_CSV"
   ],
   "files_inspected": [
     "reference.md",
     "todo.md",
     "last_run.json",
     "cron_brief_latest.md",
-    "csv_statement_analysis.py"
+    "csv_statement_analysis.py",
+    "Plot_csv.py"
   ],
   "files_changed": [
     "csv_statement_analysis.py",
+    "Plot_csv.py",
     "reference.md",
     "todo.md",
     "last_run.json",
@@ -27,14 +29,17 @@
   ],
   "verification": [
     {
-      "command": "python3 -m py_compile Vellai/BudgetSorter/csv_statement_analysis.py",
-      "passed": true
+      "command": "python3 -m py_compile Vellai/BudgetSorter/csv_statement_analysis.py Vellai/BudgetSorter/Plot_csv.py",
+      "passed": true,
+      "result": "PASS:py_compile"
     },
     {
-      "command": "python3 - <<'PY' ... ast.parse('Vellai/BudgetSorter/csv_statement_analysis.py') ... confirm __main__ guard ... PY",
-      "passed": true
+      "command": "[ -f Vellai/BudgetSorter/Revolut_Sep_to_Jan.csv ] && echo PASS:default_csv_present || echo FAIL:default_csv_missing",
+      "passed": false,
+      "result": "FAIL:default_csv_missing"
     }
   ],
   "git": "None in this job; git is deferred to the sync job.",
-  "next_review": "2026-06-08"
+  "next_review": "2026-06-22",
+  "notes": "This content-only run stayed inside Vellai/BudgetSorter, completed the shared statement-path TODO, and recorded the missing default CSV file as the next directly observed follow-up."
 }
