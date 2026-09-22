@@ -9,7 +9,7 @@ file paths on code nobody had executed. Every task below is ordered to end that.
 
 ---
 
-### 1. `[QUICK WIN ~15min]` Make the repo runnable for the first time — commit a synthetic statement CSV
+### 1. `[DONE 2026-09-22]` Make the repo runnable for the first time — commit a synthetic statement CSV
 
 `.gitignore:31` ignores `*.csv` wholesale, so the sample input this project needs can never be
 tracked. Add a negation (e.g. `!sample_statement.csv`) directly under that rule, then commit a
