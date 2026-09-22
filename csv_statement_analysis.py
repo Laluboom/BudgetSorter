@@ -8,7 +8,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from sklearn.linear_model import LinearRegression  # type: ignore
 
-DEFAULT_STATEMENT_CSV = Path(__file__).resolve().with_name("Revolut_Sep_to_Jan.csv")
+DEFAULT_STATEMENT_CSV = Path(__file__).resolve().with_name("sample_statement.csv")
 
 
 def total_spending_per_month(df):

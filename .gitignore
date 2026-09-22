@@ -27,6 +27,7 @@ Recipt_Budget/images/
 Recipt_Budget/test/
 Recipt_Budget/OCR_parse/
 *.csv
+!sample_statement.csv
 *.xlsx
 *.xls
 *.jpeg

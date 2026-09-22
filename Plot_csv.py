@@ -4,7 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-DEFAULT_STATEMENT_CSV = Path(__file__).resolve().with_name("Revolut_Sep_to_Jan.csv")
+DEFAULT_STATEMENT_CSV = Path(__file__).resolve().with_name("sample_statement.csv")
 
 
 def resolve_statement_csv_path():
