@@ -1,45 +1,46 @@
 {
-  "date": "2026-06-15",
-  "selected_by": "random choice from eligible Vellai projects after skip rules",
-  "run_attempted": true,
-  "run_succeeded": true,
-  "run_status": "Completed TODO item 1 by replacing the duplicated hard-coded statement CSV path with a shared project-relative default plus a BUDGETSORTER_STATEMENT_CSV override in both statement scripts.",
-  "chosen_todo_item": "todo.md item 1 \u2014 replace the hard-coded statement CSV paths with a shared configurable input path",
-  "issues_confirmed": [
-    "Plot_csv.py:46-52, Plot_csv.py:63-69, and Plot_csv.py:76-82 still require a graphical display because they call plt.show() directly",
-    "Recipt_Budget/OCR_Parsing.py:12-15 still hard-code both the output CSV path and the input receipt image list",
-    "Recipt_Budget/main.py:28 expects a ParsedResults_3 key; insufficient evidence that current OCR exports match that schema",
-    "Revolut_Sep_to_Jan.csv is not present in the project root, so local runs still need either that file or BUDGETSORTER_STATEMENT_CSV"
-  ],
+  "date": "2026-09-22",
+  "tier": "04_early_stage_and_ideas",
+  "selected_by": "daily routine, weighted random",
   "files_inspected": [
-    "reference.md",
-    "todo.md",
-    "last_run.json",
-    "cron_brief_latest.md",
-    "csv_statement_analysis.py",
-    "Plot_csv.py"
-  ],
-  "files_changed": [
     "csv_statement_analysis.py",
     "Plot_csv.py",
+    "Recipt_Budget/OCR_Parsing.py",
+    "Recipt_Budget/trial.py",
+    "Recipt_Budget/main.py",
+    "Recipt_Budget/img_crp.py",
+    "requirements.txt",
+    ".gitignore",
+    ".env.example",
     "reference.md",
     "todo.md",
     "last_run.json",
     "cron_brief_latest.md"
   ],
-  "verification": [
-    {
-      "command": "python3 -m py_compile Vellai/BudgetSorter/csv_statement_analysis.py Vellai/BudgetSorter/Plot_csv.py",
-      "passed": true,
-      "result": "PASS:py_compile"
-    },
-    {
-      "command": "[ -f Vellai/BudgetSorter/Revolut_Sep_to_Jan.csv ] && echo PASS:default_csv_present || echo FAIL:default_csv_missing",
-      "passed": false,
-      "result": "FAIL:default_csv_missing"
-    }
+  "issues_confirmed": [
+    "Plot_csv.py:23 sums Amount unsigned and prints it as 'Total Spent'; with positive income rows present this is net cash flow, not spending.",
+    "csv_statement_analysis.py:44 applies .abs() to Amount, counting income as spending; the exclude_keywords filter at csv_statement_analysis.py:46 covers transfer/friend/reimbursement/split/payback but not salary, top-up, refund or cashback.",
+    "csv_statement_analysis.py:63-65 predicts positional indices n..n+2 (the months after the data ends) while csv_statement_analysis.py:67-69 builds labels starting at the last observed month, so printed values at :103-104 and plotted points at :82-89 are off by one month.",
+    "csv_statement_analysis.py:68 uses freq=\"M\", deprecated in pandas >= 2.2 in favour of \"ME\"; requirements.txt:5 pins no version.",
+    "csv_statement_analysis.py:17-18, :24-25 and :28-31 group by Description (the raw merchant string) while naming the result a category; .unstack() yields one column per merchant.",
+    "Recipt_Budget/OCR_Parsing.py:118 writes header ['Date','Item Name','Item Price','Receipt Total','Total Items Count'] and Recipt_Budget/trial.py:119 writes ['Date','Items List','Total Items','Grand Total'] to the same receipt_log.csv, so rows from the two scripts disagree column-for-column.",
+    "Recipt_Budget/OCR_Parsing.py:125 writes the literal string \"VARIES\" into the Item Price column, so per-item prices are never recorded.",
+    "parse_receipt_data is duplicated near-identically at Recipt_Budget/OCR_Parsing.py:45-107 and Recipt_Budget/trial.py:62-112.",
+    "Recipt_Budget/main.py:28 reads data['ParsedResults_3']; the OCR.space response key is ParsedResults, so this helper cannot have worked.",
+    "Plot_csv.py:18, Recipt_Budget/OCR_Parsing.py:133, Recipt_Budget/trial.py:128 and Recipt_Budget/img_crp.py:3 perform I/O at module import; none of the four is importable or testable.",
+    "Plot_csv.py:46-52, :63-69 and :76-82 call plt.show(), blocking any headless run.",
+    ".gitignore:31 ignores *.csv with no negation, so no sample statement fixture can be committed.",
+    "No input data exists anywhere in the tree: find over the working tree returns only last_run.json, and git status --ignored is empty. pandas and sklearn are not importable in this environment. The project has never been executed."
   ],
-  "git": "None in this job; git is deferred to the sync job.",
-  "next_review": "2026-06-22",
-  "notes": "This content-only run stayed inside Vellai/BudgetSorter, completed the shared statement-path TODO, and recorded the missing default CSV file as the next directly observed follow-up."
+  "browser_checked": false,
+  "proposed_tasks": [
+    "[QUICK WIN ~15min] Add a narrow .gitignore negation under .gitignore:31 and commit a ~15-row synthetic Revolut CSV with mixed-sign rows; point DEFAULT_STATEMENT_CSV (csv_statement_analysis.py:11, Plot_csv.py:7) at it so the repo can be run and verified at all.",
+    "[DESIGN] Add the missing categorisation: a substring->category map and a categorise() helper applied in load_statement_data (csv_statement_analysis.py:41-49), then regroup :17-31 on Category and report the Uncategorised share.",
+    "[BUG] Reconcile sign handling between Plot_csv.py:23 and csv_statement_analysis.py:44 by selecting debits explicitly instead of .abs()/raw sum.",
+    "[BUG] Derive forecast labels from the period index rather than pd.date_range at csv_statement_analysis.py:67-69, fixing the one-month offset; switch freq=\"M\" to \"ME\".",
+    "[CHORE] Collapse Recipt_Budget/trial.py into OCR_Parsing.py behind a main() guard, settle one receipt_log.csv schema, fix the ParsedResults key at main.py:28, and drop or relocate img_crp.py."
+  ],
+  "verdict": "REVIVE",
+  "verdict_rationale": "Not a templated stub: ~670 lines of real Python across statement analysis and receipt OCR, and the underlying idea (categorise my own spending from bank exports plus receipts) is concrete and personally useful. But the feature the repo is named after does not exist, and the project has never once been executed. The revival path is narrow and fits one session: commit a sample statement, add a category map, and make one script produce a per-category monthly table. If that session does not happen by the next review, the honest call flips to RETIRE.",
+  "next_review": "2026-10-02"
 }
