@@ -1,14 +1,27 @@
 # Reference — BudgetSorter
 
-_Last refreshed: 2026-09-22 — verdict: **REVIVE**_
+_Last refreshed: 2026-10-30 — verdict: **PARK**_
 
 ## Purpose
-Intended: sort personal spending into categories from two sources — Revolut CSV statement exports
-and photographed receipts (OCR.space) — and summarise/forecast from there.
+Intended: sort personal spending into categories from two sources — Revolut CSV exports and
+photographed receipts (OCR.space) — then summarise and forecast. Actual: two overlapping
+statement-summary scripts and a four-file receipt-OCR experiment. **Nothing categorises
+anything.** The "sorter" in BudgetSorter does not exist.
 
-Actual, as of today: two overlapping statement-summary scripts and a separate receipt-OCR
-experiment. **Nothing categorises anything.** The "sorter" in BudgetSorter does not exist yet.
-That gap, not code quality, is the reason this repo has stalled.
+## Why PARK, not REVIVE
+1. **The statement half is redundant with its own data source.** Input is a Revolut export,
+   and the Revolut app already shows category breakdowns, merchant totals and monthly trend.
+   `csv_statement_analysis.py` + `Plot_csv.py` (~210 lines) rebuild a free feature.
+2. **The receipt half is the only novel part** — no bank gives you line items — and it is in
+   the worst shape: one regex parser copied into two files, an extractor reading a key the API
+   never returns, an unrelated OpenCV experiment, no input images, demo API key.
+3. **No human has committed here since 2026-05-30.** All five later commits are automation.
+4. The last review's unblocking task — commit a runnable fixture — landed 2026-09-22 and was
+   never used. Run on it, the pipeline forecasts *negative* spending.
+
+**What would have to be true to start:** a recurring need for item-level spend data Revolut
+cannot answer, plus real receipt photos and an OCR path (paid OCR.space key or local Tesseract)
+committed as fixtures. Until then: a solved problem bolted to an unstaffed hard one.
 
 ## Stack
 Python 3 — pandas, numpy, matplotlib, scikit-learn, requests, python-dotenv, opencv-python,
@@ -17,49 +30,36 @@ google-generativeai. All unpinned (`requirements.txt`).
 ## Entry Points
 ```bash
 pip install -r requirements.txt
-export BUDGETSORTER_STATEMENT_CSV=/path/to/revolut_export.csv   # no default file is committed
-python3 csv_statement_analysis.py     # summary + 3-month linear forecast + blocking plot
+python3 csv_statement_analysis.py     # summary + 3-month forecast + blocking plt.show()
 python3 Plot_csv.py                   # plots only; no main(), runs on import
-cd Recipt_Budget && python3 OCR_Parsing.py   # needs receipt .jpegs that are not in the repo
+# BUDGETSORTER_STATEMENT_CSV=/path/to/export.csv overrides the committed sample
+cd Recipt_Budget && python3 OCR_Parsing.py   # needs receipt .jpegs not present in the repo
 ```
+Note: `pandas`/`sklearn` are not importable in this environment and `python3 -m venv` fails
+(`ensurepip` missing on python3.14), so the code still cannot be executed here.
 
 ## Files
-- `csv_statement_analysis.py` — statement load/filter, monthly+weekly breakdown, LinearRegression
-  forecast, unused `run_ai_model()` Gemini helper at `:118-123`
+- `csv_statement_analysis.py` — load/filter, monthly+weekly breakdown, LinearRegression
+  forecast, dead `run_ai_model()` Gemini helper at `:118-123`
 - `Plot_csv.py` — plotting-only variant of the same analysis, entirely at module level
-- `Recipt_Budget/OCR_Parsing.py` — OCR.space upload → regex parse → `receipt_log.csv`
-- `Recipt_Budget/trial.py` — near-duplicate of the above with an API-response cache
-- `Recipt_Budget/main.py` — OCR JSON text extractor; reads a key OCR.space does not return
-- `Recipt_Budget/img_crp.py` — unrelated Harris-corner experiment on a missing image
-
-## Current State (verified 2026-09-22)
-**The project has never been run.** The working tree is 13 files and nothing else: no statement
-CSV, no receipt images, no venv, no cached OCR JSON, nothing ignored-but-present
-(`git status --ignored` is empty). `pandas` and `sklearn` are not importable in this environment.
-Commits of 2026-05-30, -06-08 and -06-15 were automated sessions that refactored input paths and
-verified only with `py_compile` — real refactors, but on code no one had executed, against data
-that does not exist. That is the pattern to break; see `todo.md:1`.
+- `sample_statement.csv` — 15-row synthetic Revolut export (added 2026-09-22, never used)
+- `Recipt_Budget/OCR_Parsing.py` — OCR.space upload → regex parse → `receipt_log.csv`;
+  `trial.py` is a near-duplicate plus a response cache
+- `Recipt_Budget/main.py` — OCR JSON extractor; reads a key OCR.space does not return.
+  `img_crp.py` — unrelated Harris-corner experiment on a missing image
+- No `README.md`.
 
 ## Confirmed Issues
-- `Plot_csv.py:23` sums `Amount` unsigned and calls it "Total Spent" — that is net cash flow, not
-  spend. `csv_statement_analysis.py:44` takes `.abs()` instead, counting income as spending; the
-  keyword filter at `:46` excludes transfers but not salary, top-ups, refunds or cashback.
-- `csv_statement_analysis.py:67-69` labels the forecast from the **last observed** month while
-  `:63-65` predicts the three months after it — every value at `:103-104` and `:82-89` is off by
-  one month. `freq="M"` there is also deprecated in pandas ≥2.2 (`"ME"`), and `requirements.txt:5`
-  is unpinned.
-- `csv_statement_analysis.py:17-31` group by `Description` (merchant) while naming it "category";
-  `.unstack()` therefore produces one column per merchant.
-- `Recipt_Budget/OCR_Parsing.py:118` and `Recipt_Budget/trial.py:119` write **different headers**
-  to the same `receipt_log.csv`; `OCR_Parsing.py:125` writes `"VARIES"` in place of item price.
-- `Recipt_Budget/main.py:28` reads `data['ParsedResults_3']`; OCR.space returns `ParsedResults`.
-- `Plot_csv.py:18`, `OCR_Parsing.py:133`, `trial.py:128`, `img_crp.py:3` all do I/O at import —
-  nothing here is importable or testable.
-- `Plot_csv.py:46-52`, `:63-69`, `:76-82` call `plt.show()`, so any headless run blocks.
-- `.gitignore:31` ignores `*.csv` with no negation, so no sample input can be committed.
+Full detail with line numbers in `todo.md`. Headlines, replayed over `sample_statement.csv`:
+`Plot_csv.py:23` prints "Total Spent: £7129.69" where real debit spend is £370.31;
+`csv_statement_analysis.py:44` counts the three £2500 income rows as spend, so `:103-104`
+prints £34.07, −£735.33, −£1504.73 as *predicted spending*; `:67-69` labels the forecast one
+month early; `:17-31` group by merchant while calling it "category". In `Recipt_Budget/`,
+`OCR_Parsing.py:118` and `trial.py:119` write different headers to one `receipt_log.csv`.
+Every file here does I/O at import, so nothing is importable or testable.
 
 ## Security Notes
-- `.env`, bank exports, receipt images and generated logs stay uncommitted — `.gitignore` is
-  correct on this and should keep any fixture negation narrow (one named file, not `*.csv`).
+- `.env`, bank exports, receipt images and generated logs stay uncommitted; `.gitignore:29-30`
+  ignores `*.csv` with a narrow negation for `sample_statement.csv` only. Keep it narrow.
 - `Recipt_Budget/OCR_Parsing.py:11` and `trial.py:11` fall back to the OCR.space `"helloworld"`
   demo key when `OCR_SPACE_API_KEY` is unset.

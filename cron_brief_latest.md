@@ -1,47 +1,63 @@
-# BudgetSorter — review 2026-09-22
+# Daily brief — BudgetSorter (2026-10-30)
 
-**Verdict: REVIVE** (conditionally — see the last paragraph).
+**Verdict: PARK.** Reversing the previous review's REVIVE.
 
-I read all six Python files, the git history, `.gitignore`, `requirements.txt`, and the tracking
-files left by the previous automated runs. No browser check — this is a CLI/pandas project.
+## What I looked at
 
-The tier assumption is wrong for this repo. It is not templated scaffolding: there are ~670 lines
-of real Python doing real work across two areas — Revolut statement analysis with a linear-regression
-forecast, and a receipt OCR pipeline against OCR.space. The problem is different and more specific.
+Full git history (10 commits), both statement scripts end to end, all four files in
+`Recipt_Budget/`, the fixture that last session's doer committed, `requirements.txt`,
+`.gitignore` and `.env.example`. Not a web project, so no browser check. I tried to actually
+execute the pipeline — `pandas` isn't importable here and `python3 -m venv` fails because
+`ensurepip` is missing on python3.14 — so instead I replayed the pipeline's arithmetic over
+`sample_statement.csv` with stdlib `csv` to get real numbers rather than guesses.
 
-**Two things define the current state.** First, the feature the project is named after does not
-exist. Nothing in this codebase categorises anything. `csv_statement_analysis.py:28-31` is called
-`average_spending_per_category` but groups by `Description` — the raw merchant string from the
-export — so the monthly `.unstack()` at `:17-18` produces one column per merchant rather than a
-budget breakdown. Second, **the project has never been run.** The working tree is 13 files and
-nothing else: no statement CSV, no receipt images, no venv, and `git status --ignored` comes back
-empty, so there isn't even a local untracked copy. `.gitignore:31` ignores `*.csv` with no
-negation, which means a sample input *cannot* be committed even if someone wanted to.
+## What I found
 
-That second point explains the history. The commits of 2026-05-30, 06-08 and 06-15 were automated
-sessions that moved input paths around and verified with `py_compile` — legitimate refactors, but
-on code nobody had executed against data that does not exist. Predictably, the bugs that only
-show up on real rows survived untouched. The clearest is sign handling: `Plot_csv.py:23` sums
-`Amount` unsigned and labels it "Total Spent" (that is net cash flow — near zero once a salary row
-is present), while `csv_statement_analysis.py:44` takes `.abs()` and counts income *as* spending.
-Two scripts, the same column, two different wrong answers. The forecast is also mislabelled:
-`:63-65` predicts the three months after the data ends, `:67-69` labels them starting from the last
-observed month, so every printed and plotted point is off by one. And in `Recipt_Budget/`,
-`OCR_Parsing.py:118` and `trial.py:119` write different headers into the same `receipt_log.csv`
-from a duplicated copy of the same parser.
+The previous review (2026-09-22) correctly identified the blocker as "this has never been
+run," and set one task: commit a sample statement CSV so it could be. The doer did it
+(`b58d7de`). **Nobody ran it.** Seven weeks, zero commits.
 
-**What I'm proposing** is ordered to break that pattern rather than continue it. The quick win is
-a `.gitignore` negation plus a ~15-row synthetic Revolut CSV with deliberately mixed-sign rows —
-15 minutes, and it is the blocker under everything else, because until it lands no change here can
-be verified by anything stronger than `py_compile`. Then the one session that actually revives this:
-a substring→category map applied in `load_statement_data()`, regrouping on `Category`, and printing
-what fraction of spend fell through to `Uncategorised`. That number is the project's real metric.
-The two sign/forecast bugs and the `Recipt_Budget/` consolidation follow, and each becomes testable
-once the fixture exists.
+And the fixture it added proves the point loudly. Replaying the numbers:
 
-I say REVIVE because the idea is concrete, personally useful, and about 70% plumbed — but I'd hold
-it to the condition. If that one session hasn't happened by the next review, the honest call is
-RETIRE: a fourth cycle of refactoring code that has never executed would just be a slower way of
-reaching the same answer.
+- `Plot_csv.py:23` prints `Total Spent: £7129.69`. Real debit spend in that file is **£370.31**.
+  It's summing signed amounts, so three £2500 salary rows swamp the result — it's reporting net
+  cash flow under a "Total Spent" label.
+- `csv_statement_analysis.py:44` has the mirror-image bug: `.abs()` everything, and the exclude
+  filter at `:46` catches "transfer/friend/..." but not salary or top-ups. So the £2500 rows
+  become *spending*. Monthly totals come out 2587.69 / 2628.08 / 2573.24 / 41.30 (December has
+  one row), the regression fits slope −769.40, and `:103-104` prints **£34.07, −£735.33,
+  −£1504.73** as predicted spending. The headline feature of this repo outputs negative money
+  on the repo's own test data. The labels are off by one month on top of that (`:63-69`).
 
-Next review: 2026-10-02.
+But the fixable bugs aren't the real finding. The real finding is **what this project is
+competing with**. Its input is a Revolut CSV export, and the Revolut app already gives you
+category breakdowns, merchant totals and monthly trend for free. `csv_statement_analysis.py`
+and `Plot_csv.py` — 210 lines, the bulk of the "working" code — rebuild a feature that ships
+with the data source. The last review's headline task was to add a `CATEGORIES` dict to make
+the "sorter" real; that would be 45 minutes spent reproducing a free screen.
+
+The part that *isn't* redundant is receipt line items — no bank tells you that you bought £12
+of beer inside a £45 Tesco shop. That's `Recipt_Budget/`, and it's the half in the worst shape:
+`parse_receipt_data` copied near-identically into `OCR_Parsing.py:45-107` and `trial.py:62-112`,
+both appending to one `receipt_log.csv` under **different headers** (`:118` vs `:119`), with
+`"VARIES"` written where the item price should go (`:125`) — so per-item price, the entire
+point, is never recorded. `main.py:28` reads `data['ParsedResults_3']`, a key OCR.space has
+never returned, so that extractor has never produced output. `img_crp.py` is an unrelated
+Harris-corner experiment on an image that isn't in the repo.
+
+Last thing worth noting: all five commits after the 2026-05-30 initial pair are automation.
+The human contribution to this repo was one sitting, five months ago.
+
+## What I'm proposing
+
+Not a roadmap — five self-contained items that make the park honest and keep the salvageable
+part salvageable. Quick win is the one that makes the decision durable: **there is no
+`README.md` in this repo at all**, only automation-written `todo.md`/`reference.md`, which is
+exactly how a park verdict gets re-litigated by the next review agent. Then: collapse
+`Recipt_Budget/` to one parser with a committed offline OCR fixture (the salvage); drop the
+module-level `google.generativeai` import at `:4`, which blocks the main script from starting
+for a dead function asking for the retired `gemini-pro`; fix the two sign bugs; delete
+`main.py` and `img_crp.py`.
+
+`next_review` is set to 2026-11-09 per the routine, but a parked repo doesn't merit a full
+review in 10 days — I'd demote BudgetSorter out of the daily rotation.
