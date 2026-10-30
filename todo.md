@@ -20,7 +20,7 @@ true" list in `reference.md` is actually true.
 
 ---
 
-### 1. `[QUICK WIN ~15min]` `[DOCS]` There is no README — add one, carrying the park verdict
+### 1. `[DONE 2026-10-30]` `[DOCS]` There is no README — add one, carrying the park verdict
 
 The repo has `reference.md`, `todo.md` and `cron_brief_latest.md`, all written by automation,
 and **no `README.md` at all**. Anyone landing here (including the next review agent, or
